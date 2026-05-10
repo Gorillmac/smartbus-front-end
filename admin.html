@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartBus – Admin Dashboard</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="./index.html">
+    <div class="bus-icon">🚌</div>
+    SmartBus &mdash; Admin
+  </a>
+  <div class="navbar-right">
+    <div class="user-info">
+      <div class="nav-avatar" id="userAvatar">A</div>
+      <span id="userName">Admin</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Overview</div>
+      <div class="sidebar-item active" onclick="showPanel('home')" id="nav-home">
+        <span class="icon">📊</span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showPanel('trips')" id="nav-trips">
+        <span class="icon">🟢</span> Live Trips
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Management</div>
+      <div class="sidebar-item" onclick="showPanel('buses')" id="nav-buses">
+        <span class="icon">🚌</span> Buses
+      </div>
+      <div class="sidebar-item" onclick="showPanel('routes')" id="nav-routes">
+        <span class="icon">🗺</span> Routes
+      </div>
+      <div class="sidebar-item" onclick="showPanel('drivers')" id="nav-drivers">
+        <span class="icon">👤</span> Drivers
+      </div>
+      <div class="sidebar-item" onclick="showPanel('passengers')" id="nav-passengers">
+        <span class="icon">👥</span> Passengers
+      </div>
+      <div class="sidebar-item" onclick="showPanel('tickets')" id="nav-tickets">
+        <span class="icon">🎫</span> Tickets
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Reports</div>
+      <div class="sidebar-item" onclick="showPanel('feedback')" id="nav-feedback">
+        <span class="icon">⭐</span> Feedback &amp; Ratings
+      </div>
+      <div class="sidebar-item" onclick="showPanel('complaints')" id="nav-complaints">
+        <span class="icon">📝</span> Complaints
+      </div>
+      <div class="sidebar-item" onclick="showPanel('reports')" id="nav-reports">
+        <span class="icon">📈</span> System Reports
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Communication</div>
+      <div class="sidebar-item" onclick="showPanel('announce')" id="nav-announce">
+        <span class="icon">📢</span> Announcements
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- DASHBOARD HOME -->
+    <div class="panel active" id="panel-home">
+      <div class="page-header">
+        <h2>Admin Dashboard</h2>
+        <p>System overview and management controls for SmartBus</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="label">Total Buses</div>
+          <div class="value" id="stat-buses">0</div>
+          <div class="change text-blue" id="stat-buses-active"></div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Active Routes</div>
+          <div class="value" id="stat-routes">0</div>
+          <div class="change text-green" id="stat-routes-all"></div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Registered Drivers</div>
+          <div class="value" id="stat-drivers">0</div>
+          <div class="change text-gray"></div>
+        </div>
+        <div class="stat-card red">
+          <div class="label">Passengers</div>
+          <div class="value" id="stat-passengers">0</div>
+          <div class="change text-gray">Registered users</div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat-card blue">
+          <div class="label">Total Tickets</div>
+          <div class="value" id="stat-tickets">0</div>
+          <div class="change" id="stat-tickets-active"></div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Total Trips</div>
+          <div class="value" id="stat-trips">0</div>
+          <div class="change text-green">Recorded trips</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Open Complaints</div>
+          <div class="value" id="stat-complaints">0</div>
+          <div class="change text-red">Need attention</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>🚌 Bus Fleet Status</h3></div>
+          <div class="card-body" id="busStatusSummary"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>📋 Recent Activity</h3></div>
+          <div class="card-body" id="recentActivity"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE TRIPS -->
+    <div class="panel" id="panel-trips">
+      <div class="page-header">
+        <h2>Live Trips</h2>
+        <p>Currently active bus trips and driver tracking</p>
+      </div>
+      <div id="liveTripsContent"></div>
+    </div>
+
+    <!-- BUSES -->
+    <div class="panel" id="panel-buses">
+      <div class="page-header flex-between">
+        <div><h2>Bus Management</h2><p>Manage your fleet of buses</p></div>
+        <button class="btn btn-primary" onclick="openBusModal()">+ Add New Bus</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Number</th><th>Plate</th><th>Make</th><th>Capacity</th><th>Route</th><th>Driver</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="busesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTES -->
+    <div class="panel" id="panel-routes">
+      <div class="page-header flex-between">
+        <div><h2>Route Management</h2><p>Manage all bus routes and schedules</p></div>
+        <button class="btn btn-primary" onclick="openRouteModal()">+ Add New Route</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Number</th><th>Name</th><th>Stops</th><th>Fare</th><th>Distance</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="routesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVERS -->
+    <div class="panel" id="panel-drivers">
+      <div class="page-header flex-between">
+        <div><h2>Driver Management</h2><p>Manage registered drivers and assignments</p></div>
+        <button class="btn btn-primary" onclick="openDriverModal()">+ Add Driver</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>License</th><th>Bus</th><th>Route</th><th>Actions</th></tr></thead>
+              <tbody id="driversBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSENGERS -->
+    <div class="panel" id="panel-passengers">
+      <div class="page-header flex-between">
+        <div><h2>Passenger Management</h2><p>View and manage registered passengers</p></div>
+        <input type="text" class="form-control" id="passengerSearch" placeholder="Search passengers..." oninput="filterPassengers()" style="width:220px" />
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Trips</th><th>Actions</th></tr></thead>
+              <tbody id="passengersBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="panel" id="panel-tickets">
+      <div class="page-header flex-between">
+        <div><h2>Ticket Management</h2><p>Create and manage passenger tickets</p></div>
+        <button class="btn btn-primary" onclick="openTicketModal()">+ Create Ticket</button>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ticket #</th><th>Passenger</th><th>Route</th><th>Type</th><th>Issue Date</th><th>Expiry</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="ticketsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEEDBACK -->
+    <div class="panel" id="panel-feedback">
+      <div class="page-header">
+        <h2>Passenger Feedback &amp; Ratings</h2>
+        <p>Review ratings and comments from passengers</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📊 Rating Overview</h3></div>
+          <div class="card-body" id="ratingOverview"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>💬 Recent Comments</h3></div>
+          <div class="card-body" id="recentComments"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLAINTS -->
+    <div class="panel" id="panel-complaints">
+      <div class="page-header">
+        <h2>Complaints &amp; Issues</h2>
+        <p>Review and resolve passenger complaints</p>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Passenger</th><th>Type</th><th>Description</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody id="complaintsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="panel" id="panel-reports">
+      <div class="page-header flex-between">
+        <div><h2>System Reports</h2><p>Download and view system reports</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary btn-sm" onclick="exportReport('trips')">📥 Export Trips</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportReport('routes')">📥 Export Routes</button>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>🚌 Bus Utilization</h3></div>
+          <div class="card-body" id="busUtilization"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>🗺 Route Performance</h3></div>
+          <div class="card-body" id="routePerformance"></div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-header"><h3>📋 All Trips Log</h3></div>
+        <div class="card-body">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Passenger</th><th>Route</th><th>Bus</th><th>Date</th><th>Departure</th><th>Arrival</th><th>Rating</th></tr></thead>
+              <tbody id="tripsLogBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS -->
+    <div class="panel" id="panel-announce">
+      <div class="page-header">
+        <h2>Announcements</h2>
+        <p>Post announcements visible to all passengers</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📝 New Announcement</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Title</label>
+              <input type="text" class="form-control" id="annTitle" placeholder="Announcement title" />
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea class="form-control" id="annMessage" rows="4" placeholder="Write your announcement..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Priority</label>
+              <select class="form-control" id="annPriority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="postAnnouncement()">📢 Post Announcement</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header flex-between"><h3>📋 All Announcements</h3><button class="btn btn-danger btn-sm" onclick="clearAnnouncements()">Clear All</button></div>
+          <div class="card-body" id="announceList"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL: Add/Edit Bus -->
+<div class="modal-overlay" id="busModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="busModalTitle">Add New Bus</h3>
+      <button class="modal-close" onclick="closeModal('busModal')">✕</button>
+    </div>
+    <input type="hidden" id="busEditId" />
+    <div class="form-group"><label>Bus Number</label><input type="text" class="form-control" id="busNumber" placeholder="e.g. BUS-004" /></div>
+    <div class="form-group"><label>Plate Number</label><input type="text" class="form-control" id="busPlate" placeholder="e.g. CA 111 GP" /></div>
+    <div class="form-group"><label>Make / Brand</label><input type="text" class="form-control" id="busMake" placeholder="e.g. Mercedes" /></div>
+    <div class="form-group"><label>Capacity (seats)</label><input type="number" class="form-control" id="busCapacity" placeholder="e.g. 40" /></div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="busStatus">
+        <option value="active">Active</option>
+        <option value="maintenance">Maintenance</option>
+        <option value="inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Assign Route</label>
+      <select class="form-control" id="busRoute">
+        <option value="">-- No Route --</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Assign Driver</label>
+      <select class="form-control" id="busDriver">
+        <option value="">-- No Driver --</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveBus()">Save Bus</button>
+  </div>
+</div>
+
+<!-- MODAL: Add/Edit Route -->
+<div class="modal-overlay" id="routeModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="routeModalTitle">Add New Route</h3>
+      <button class="modal-close" onclick="closeModal('routeModal')">✕</button>
+    </div>
+    <input type="hidden" id="routeEditId" />
+    <div class="form-group"><label>Route Number</label><input type="text" class="form-control" id="routeNum" placeholder="e.g. R5" /></div>
+    <div class="form-group"><label>Route Name</label><input type="text" class="form-control" id="routeName" placeholder="e.g. City Centre – Soweto" /></div>
+    <div class="form-group"><label>Stops (comma-separated)</label><input type="text" class="form-control" id="routeStops" placeholder="e.g. Stop A, Stop B, Stop C" /></div>
+    <div class="form-group"><label>Schedule (comma-separated times)</label><input type="text" class="form-control" id="routeSchedule" placeholder="e.g. 06:00, 07:00, 08:00" /></div>
+    <div class="form-group"><label>Fare</label><input type="text" class="form-control" id="routeFare" placeholder="e.g. R 15.00" /></div>
+    <div class="form-group"><label>Distance</label><input type="text" class="form-control" id="routeDistance" placeholder="e.g. 22 km" /></div>
+    <div class="form-group"><label>Duration</label><input type="text" class="form-control" id="routeDuration" placeholder="e.g. 45 min" /></div>
+    <div class="form-group"><label>Status</label>
+      <select class="form-control" id="routeStatus">
+        <option value="active">Active</option>
+        <option value="suspended">Suspended</option>
+      </select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveRoute()">Save Route</button>
+  </div>
+</div>
+
+<!-- MODAL: Create Ticket -->
+<div class="modal-overlay" id="ticketModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Create New Ticket</h3>
+      <button class="modal-close" onclick="closeModal('ticketModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Ticket Number</label><input type="text" class="form-control" id="ticketId" placeholder="e.g. SB020" style="text-transform:uppercase;letter-spacing:2px" /></div>
+    <div class="form-group"><label>Assign to Passenger (optional)</label>
+      <select class="form-control" id="ticketPassenger">
+        <option value="">-- Unassigned --</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Route</label>
+      <select class="form-control" id="ticketRoute"></select>
+    </div>
+    <div class="form-group"><label>Ticket Type</label>
+      <select class="form-control" id="ticketType">
+        <option>Single Trip</option>
+        <option>Daily</option>
+        <option>Weekly</option>
+        <option>Monthly</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Expiry Date</label><input type="date" class="form-control" id="ticketExpiry" /></div>
+    <button class="btn btn-primary btn-full" onclick="saveTicket()">Create Ticket</button>
+  </div>
+</div>
+
+<!-- MODAL: Add Driver -->
+<div class="modal-overlay" id="driverModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Add New Driver</h3>
+      <button class="modal-close" onclick="closeModal('driverModal')">✕</button>
+    </div>
+    <div class="form-group"><label>Full Name</label><input type="text" class="form-control" id="drvName" /></div>
+    <div class="form-group"><label>Email</label><input type="email" class="form-control" id="drvEmail" /></div>
+    <div class="form-group"><label>Phone</label><input type="text" class="form-control" id="drvPhone" /></div>
+    <div class="form-group"><label>License Number</label><input type="text" class="form-control" id="drvLicense" /></div>
+    <div class="form-group"><label>Password</label><input type="password" class="form-control" id="drvPassword" placeholder="Login password" /></div>
+    <div class="form-group"><label>Assign Bus</label>
+      <select class="form-control" id="drvBus"><option value="">-- No Bus --</option></select>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveDriver()">Add Driver</button>
+  </div>
+</div>
+
+<footer class="app-footer" style="margin-left:var(--sidebar-width)">
+  SmartBus System &bull; Admin Panel &bull; Group P &ndash; SWP316D
+</footer>
+
+<div id="toast-container"></div>
+<script src="./src/config.js"></script>
+<script type="module" src="./src/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartBus – Passenger Dashboard</title>
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a class="navbar-brand" href="./index.html">
+    <div class="bus-icon">🚌</div>
+    SmartBus
+  </a>
+  <div class="navbar-right">
+    <button class="notif-btn" onclick="showPanel('notifications')" title="Notifications">
+      🔔
+      <span class="notif-badge" id="notifCount">0</span>
+    </button>
+    <div class="user-info">
+      <div class="nav-avatar" id="userAvatar">U</div>
+      <span id="userName">Passenger</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Main</div>
+      <div class="sidebar-item active" onclick="showPanel('home')" id="nav-home">
+        <span class="icon">🏠</span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showPanel('routes')" id="nav-routes">
+        <span class="icon">🗺</span> Routes &amp; Schedules
+      </div>
+      <div class="sidebar-item" onclick="showPanel('track')" id="nav-track">
+        <span class="icon">📍</span> Track My Bus
+      </div>
+      <div class="sidebar-item" onclick="showPanel('ticket')" id="nav-ticket">
+        <span class="icon">🎫</span> Verify Ticket
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Personal</div>
+      <div class="sidebar-item" onclick="showPanel('history')" id="nav-history">
+        <span class="icon">📋</span> Trip History
+      </div>
+      <div class="sidebar-item" onclick="showPanel('notifications')" id="nav-notifications">
+        <span class="icon">🔔</span> Notifications
+      </div>
+      <div class="sidebar-item" onclick="showPanel('rate')" id="nav-rate">
+        <span class="icon">⭐</span> Rate Service
+      </div>
+      <div class="sidebar-item" onclick="showPanel('complaints')" id="nav-complaints">
+        <span class="icon">📝</span> Report Issue
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Booking &amp; Chat</div>
+      <div class="sidebar-item" onclick="showPanel('schedule')" id="nav-schedule">
+        <span class="icon">📅</span> Schedule a Ride
+      </div>
+      <div class="sidebar-item" onclick="showPanel('chat')" id="nav-chat">
+        <span class="icon">💬</span> Chat with Driver
+      </div>
+      <div class="sidebar-item" onclick="showPanel('bot')" id="nav-bot">
+        <span class="icon">🤖</span> SmartBot Assistant
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Safety</div>
+      <div class="sidebar-item" onclick="showPanel('sos')" id="nav-sos">
+        <span class="icon">🆘</span> Emergency / SOS
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- HOME PANEL -->
+    <div class="panel active" id="panel-home">
+      <div class="page-header">
+        <h2>Welcome back, <span id="welcomeName">Passenger</span>!</h2>
+        <p>Here is your transport overview for today.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="label">My Active Tickets</div>
+          <div class="value" id="stat-tickets">0</div>
+          <div class="change text-blue">View tickets →</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">Total Trips Taken</div>
+          <div class="value" id="stat-trips">0</div>
+          <div class="change text-green">This year</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Active Bus Routes</div>
+          <div class="value" id="stat-routes">0</div>
+          <div class="change text-gray">Across all areas</div>
+        </div>
+        <div class="stat-card red">
+          <div class="label">Unread Notifications</div>
+          <div class="value" id="stat-notifs">0</div>
+          <div class="change text-red">Check updates</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Quick announcements -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📢 Announcements</h3>
+            <span class="badge badge-blue" id="announce-count">0 new</span>
+          </div>
+          <div class="card-body" id="announcements-home"></div>
+        </div>
+
+        <!-- Next buses -->
+        <div class="card">
+          <div class="card-header">
+            <h3>🚌 Next Departures</h3>
+            <small class="text-gray">Based on your routes</small>
+          </div>
+          <div class="card-body" id="next-departures"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTES PANEL -->
+    <div class="panel" id="panel-routes">
+      <div class="page-header flex-between">
+        <div>
+          <h2>Routes &amp; Schedules</h2>
+          <p>All available SmartBus routes and departure times</p>
+        </div>
+        <div>
+          <input type="text" class="form-control" id="routeSearch" placeholder="Search routes..." oninput="filterRoutes()" style="width:200px" />
+        </div>
+      </div>
+      <div id="routesList"></div>
+    </div>
+
+    <!-- TRACK BUS PANEL -->
+    <div class="panel" id="panel-track">
+      <div class="page-header">
+        <h2>Track My Bus</h2>
+        <p>View the live location of buses on your route</p>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-body">
+          <div class="flex gap-2" style="align-items:flex-end">
+            <div class="form-group" style="flex:1;margin:0">
+              <label>Select Route</label>
+              <select class="form-control" id="trackRouteSelect" onchange="loadTrackInfo()"></select>
+            </div>
+            <button class="btn btn-primary" onclick="refreshTracking()">🔄 Refresh</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simulated map -->
+      <div class="card mb-2">
+        <div class="card-header"><h3>📍 Live Map View (Simulated)</h3></div>
+        <div class="map-container" id="trackMap">
+          <!-- Roads -->
+          <div class="map-road h" style="top:50%;transform:translateY(-50%)"></div>
+          <div class="map-road h" style="top:25%;transform:translateY(-50%)"></div>
+          <div class="map-road h" style="top:75%;transform:translateY(-50%)"></div>
+          <div class="map-road v" style="left:20%"></div>
+          <div class="map-road v" style="left:50%"></div>
+          <div class="map-road v" style="left:80%"></div>
+          <!-- Bus markers added by JS -->
+        </div>
+        <div style="padding:10px 16px; font-size:12px; color:var(--gray); display:flex; gap:16px;">
+          <span>🟡 Bus on route</span>
+          <span>🔴 Delayed bus</span>
+          <span>🔵 Bus stop</span>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>🕐 Route Schedule</h3></div>
+          <div class="card-body" id="trackSchedule"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>📊 Bus Status</h3></div>
+          <div class="card-body" id="trackStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKET VERIFY PANEL -->
+    <div class="panel" id="panel-ticket">
+      <div class="page-header">
+        <h2>Verify Ticket</h2>
+        <p>Enter your ticket number to verify it and access bus services</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card mb-2">
+            <div class="card-header"><h3>🎫 Ticket Verification</h3></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label>Ticket Number</label>
+                <input type="text" id="ticketNum" class="form-control" placeholder="e.g. SB001" style="text-transform:uppercase;letter-spacing:2px;font-size:16px;font-weight:700;" />
+              </div>
+              <button class="btn btn-primary btn-full" onclick="verifyTicket()">Verify Ticket</button>
+              <div id="ticketResult" class="mt-2"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><h3>🎟 My Tickets</h3></div>
+            <div class="card-body" id="myTickets"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>ℹ️ How Tickets Work</h3></div>
+          <div class="card-body">
+            <p class="text-sm" style="margin-bottom:12px;">SmartBus uses ticket numbers to verify passengers before they board. Here is what you need to know:</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="alert alert-info" style="margin:0;">
+                <strong>Step 1:</strong> Get your ticket number from the admin office or from your booking confirmation.
+              </div>
+              <div class="alert alert-info" style="margin:0;">
+                <strong>Step 2:</strong> Enter the ticket number in the box on the left and click "Verify Ticket".
+              </div>
+              <div class="alert alert-success" style="margin:0;">
+                <strong>Step 3:</strong> If valid, you can board the bus and use all passenger features.
+              </div>
+              <div class="alert alert-warning" style="margin:0;">
+                <strong>Note:</strong> Ticket numbers are case-insensitive. Example: SB001, SB002
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <p class="text-sm text-gray">Sample ticket numbers to try: <strong>SB001</strong>, <strong>SB002</strong>, <strong>SB010</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIP HISTORY PANEL -->
+    <div class="panel" id="panel-history">
+      <div class="page-header flex-between">
+        <div>
+          <h2>Trip History</h2>
+          <p>Your completed and upcoming journeys</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="exportHistory()">📥 Export CSV</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="table-wrap">
+            <table id="historyTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Route</th>
+                  <th>Date</th>
+                  <th>Departure</th>
+                  <th>Arrival</th>
+                  <th>Status</th>
+                  <th>Rating</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS PANEL -->
+    <div class="panel" id="panel-notifications">
+      <div class="page-header flex-between">
+        <div>
+          <h2>Notifications</h2>
+          <p>Updates, alerts and announcements from SmartBus</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="markAllRead()">Mark all as read</button>
+      </div>
+
+      <div class="card mb-2">
+        <div class="card-header"><h3>🔔 Your Alerts</h3></div>
+        <div class="card-body" id="notifList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>📢 Announcements</h3></div>
+        <div class="card-body" id="announceList"></div>
+      </div>
+    </div>
+
+    <!-- RATE SERVICE PANEL -->
+    <div class="panel" id="panel-rate">
+      <div class="page-header">
+        <h2>Rate Transport Service</h2>
+        <p>Your feedback helps us improve the SmartBus experience</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>⭐ Submit Rating</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Select Trip</label>
+              <select class="form-control" id="rateTrip"></select>
+            </div>
+            <div class="form-group">
+              <label>Your Rating</label>
+              <div class="star-rating" id="starRating">
+                <span class="star" data-val="1" onclick="setStar(1)">★</span>
+                <span class="star" data-val="2" onclick="setStar(2)">★</span>
+                <span class="star" data-val="3" onclick="setStar(3)">★</span>
+                <span class="star" data-val="4" onclick="setStar(4)">★</span>
+                <span class="star" data-val="5" onclick="setStar(5)">★</span>
+              </div>
+              <p class="text-sm text-gray mt-1" id="ratingLabel">Click a star to rate</p>
+            </div>
+            <div class="form-group">
+              <label>Comments (optional)</label>
+              <textarea class="form-control" id="rateFeedback" rows="4" placeholder="Tell us about your experience..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="submitRating()">Submit Rating</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📊 Rating Categories</h3></div>
+          <div class="card-body">
+            <p class="text-sm text-gray mb-2">Also rate specific aspects:</p>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <div class="flex-between text-sm mb-1">
+                  <span>Punctuality</span>
+                  <span class="text-blue">3.8/5</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill" style="width:76%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between text-sm mb-1">
+                  <span>Cleanliness</span>
+                  <span class="text-blue">4.2/5</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill green" style="width:84%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between text-sm mb-1">
+                  <span>Driver Behavior</span>
+                  <span class="text-blue">4.5/5</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill green" style="width:90%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex-between text-sm mb-1">
+                  <span>Safety</span>
+                  <span class="text-blue">4.0/5</span>
+                </div>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill yellow" style="width:80%"></div>
+                </div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <p class="text-sm text-gray">These averages are based on all passenger feedback received.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLAINTS PANEL -->
+    <div class="panel" id="panel-complaints">
+      <div class="page-header">
+        <h2>Report an Issue</h2>
+        <p>Submit a complaint or report a problem with the transport service</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📝 New Report</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Issue Type</label>
+              <select class="form-control" id="complaintType">
+                <option value="delay">Bus Delay</option>
+                <option value="breakdown">Bus Breakdown</option>
+                <option value="driver">Driver Behavior</option>
+                <option value="cleanliness">Cleanliness</option>
+                <option value="overcrowding">Overcrowding</option>
+                <option value="safety">Safety Concern</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Route (if applicable)</label>
+              <select class="form-control" id="complaintRoute">
+                <option value="">-- Select Route --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea class="form-control" id="complaintDesc" rows="4" placeholder="Describe the issue in detail. Include time, location, and bus number if you know it."></textarea>
+            </div>
+            <button class="btn btn-warning btn-full" onclick="submitComplaint()">Submit Report</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📋 My Past Reports</h3></div>
+          <div class="card-body" id="myComplaints"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE A RIDE PANEL -->
+    <div class="panel" id="panel-schedule">
+      <div class="page-header">
+        <h2>Schedule a Ride</h2>
+        <p>Book your seat in advance. Your GPS location will be shared with the driver.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📅 Book a Ride</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Select Route</label>
+              <select class="form-control" id="bookRouteId"></select>
+            </div>
+            <div class="form-group">
+              <label>Departure Time</label>
+              <select class="form-control" id="bookTime"></select>
+            </div>
+            <div class="form-group">
+              <label>Pickup Stop</label>
+              <select class="form-control" id="bookStop"></select>
+            </div>
+            <div class="form-group">
+              <label>Number of Seats</label>
+              <select class="form-control" id="bookSeats">
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+              </select>
+            </div>
+            <div class="location-box" id="locationStatus">
+              <div class="loc-icon">📍</div>
+              <div>
+                <div class="text-sm bold" id="locLabel">Location not yet captured</div>
+                <div class="text-sm text-gray" id="locCoords">Click below to share your GPS</div>
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-full mb-1" onclick="captureLocation()">📡 Get My Current Location</button>
+            <button class="btn btn-primary btn-full" onclick="submitBooking()">✅ Confirm Booking</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header flex-between"><h3>📋 My Bookings</h3><button class="btn btn-danger btn-sm" onclick="clearMyBookings()">Clear</button></div>
+          <div class="card-body" id="myBookingsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSENGER CHAT PANEL -->
+    <div class="panel" id="panel-chat">
+      <div class="page-header">
+        <h2>Chat with Driver</h2>
+        <p>Send a message directly to the driver assigned to your route</p>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-header">
+          <div class="chat-avatar driver">🚌</div>
+          <div>
+            <div class="bold text-sm" id="chatDriverName">Your Driver</div>
+            <div class="text-sm text-gray" id="chatDriverRoute">Route —</div>
+          </div>
+          <span class="badge badge-green" id="chatOnlineBadge">Active</span>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-system-msg">Messages are stored locally. Start a conversation!</div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter') sendPassengerMsg()" />
+          <button class="chat-send-btn" onclick="sendPassengerMsg()">Send ➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMARTBOT PANEL -->
+    <div class="panel" id="panel-bot">
+      <div class="page-header">
+        <h2>SmartBot Assistant</h2>
+        <p>Ask BusBot anything about SmartBus routes, tickets, and services</p>
+      </div>
+      <div class="chat-wrap">
+        <div class="chat-header" style="background:linear-gradient(135deg,#1a56db,#0f2e7a)">
+          <div class="chat-avatar bot">🤖</div>
+          <div>
+            <div class="bold text-sm" style="color:white">BusBot</div>
+            <div class="text-sm" style="color:rgba(255,255,255,0.7)">SmartBus AI Assistant</div>
+          </div>
+          <span class="badge" style="background:rgba(255,255,255,0.2);color:white">Online</span>
+        </div>
+        <div class="chat-messages" id="botMessages">
+          <div class="chat-bubble bot-bubble">
+            <span>👋 Hi! I'm BusBot, your SmartBus assistant. Ask me anything — routes, tickets, schedules, emergency contacts, or how to use the app!</span>
+            <div class="bubble-time">Just now</div>
+          </div>
+          <div class="bot-quick-btns">
+            <button onclick="botQuick('What routes are available?')">🗺 Routes</button>
+            <button onclick="botQuick('How do I verify my ticket?')">🎫 Tickets</button>
+            <button onclick="botQuick('When is the next bus?')">🕐 Next Bus</button>
+            <button onclick="botQuick('Emergency contacts')">🆘 Emergency</button>
+            <button onclick="botQuick('How to schedule a ride?')">📅 Booking</button>
+            <button onclick="botQuick('What are the bus fares?')">💰 Fares</button>
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="botInput" placeholder="Ask BusBot anything..." onkeydown="if(event.key==='Enter') sendBotMsg()" />
+          <button class="chat-send-btn" onclick="sendBotMsg()">Ask ➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOS PANEL -->
+    <div class="panel" id="panel-sos">
+      <div class="page-header">
+        <h2>Emergency / SOS</h2>
+        <p>Use this feature in case of emergency. Help will be sent to your location.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card" style="text-align:center">
+          <div class="card-header"><h3>🆘 Emergency Alert</h3></div>
+          <div class="card-body">
+            <div class="alert alert-warning">
+              <strong>Only use this in a real emergency!</strong><br>
+              Pressing the SOS button will alert transport authorities and emergency services.
+            </div>
+            <button class="sos-btn" onclick="triggerSOS()">
+              SOS
+              <span class="sub">EMERGENCY</span>
+            </button>
+            <p class="text-sm text-gray mt-2">Your current location and trip details will be shared with authorities.</p>
+            <div id="sosStatus" class="mt-2"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📞 Emergency Contacts</h3></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div class="alert alert-info" style="margin:0">
+                <strong>SmartBus Emergency Line</strong><br>
+                📞 0800-SMARTBUS (0800-762-7828)<br>
+                <small>Available 24/7</small>
+              </div>
+              <div class="alert alert-danger" style="margin:0">
+                <strong>Police Emergency</strong><br>
+                📞 10111<br>
+                <small>South Africa Police Service</small>
+              </div>
+              <div class="alert alert-success" style="margin:0">
+                <strong>Ambulance / Medical</strong><br>
+                📞 10177<br>
+                <small>National Emergency Medical Services</small>
+              </div>
+              <div class="alert alert-warning" style="margin:0">
+                <strong>Fire &amp; Rescue</strong><br>
+                📞 10177<br>
+                <small>Fire Department Services</small>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+            <div class="form-group">
+              <label>Share Trip Info via SMS</label>
+              <input type="text" class="form-control" id="sharePhone" placeholder="e.g. 082 000 0000" />
+            </div>
+            <button class="btn btn-primary btn-full" onclick="shareTripInfo()">📤 Share My Location</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat availability -->
+      <div class="card mt-2">
+        <div class="card-header"><h3>💺 Seat Availability</h3></div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Select Bus</label>
+            <select class="form-control" id="seatBusSelect" onchange="loadSeatMap()" style="max-width:200px"></select>
+          </div>
+          <div class="flex gap-2 mb-2" style="font-size:13px">
+            <span style="background:var(--green-light);color:#047857;padding:3px 10px;border-radius:4px;">Green = Available</span>
+            <span style="background:var(--red-light);color:#991b1b;padding:3px 10px;border-radius:4px;">Red = Occupied</span>
+          </div>
+          <div class="seat-grid" id="seatMapGrid"></div>
+          <p class="text-sm text-gray text-center mt-1" id="seatSummary">Select a bus to view seats</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="app-footer" style="margin-left:var(--sidebar-width)">
+  SmartBus System &bull; Group P &ndash; SWP316D &bull; Built with HTML, CSS &amp; JavaScript
+</footer>
+
+<div id="toast-container"></div>
+<script src="./src/config.js"></script>
+<script type="module" src="./src/passenger.js"></script>
+</body>
+</html>

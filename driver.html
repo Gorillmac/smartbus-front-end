@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SmartBus – Driver Dashboard</title>
+  <link rel="stylesheet" href="./src/style.css" />
+  <style>
+    .trip-btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+    .big-trip-btn {
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .big-trip-btn:hover { transform: scale(1.03); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a class="navbar-brand" href="./index.html">
+    <div class="bus-icon">🚌</div>
+    SmartBus &mdash; Driver
+  </a>
+  <div class="navbar-right">
+    <span id="tripStatusBadge" class="badge badge-gray">⚫ Not Started</span>
+    <div class="user-info">
+      <div class="nav-avatar" id="userAvatar">D</div>
+      <span id="userName">Driver</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Driver Menu</div>
+      <div class="sidebar-item active" onclick="showPanel('home')" id="nav-home">
+        <span class="icon">🏠</span> Dashboard
+      </div>
+      <div class="sidebar-item" onclick="showPanel('route')" id="nav-route">
+        <span class="icon">🗺</span> My Route
+      </div>
+      <div class="sidebar-item" onclick="showPanel('trip')" id="nav-trip">
+        <span class="icon">🚌</span> Trip Control
+      </div>
+      <div class="sidebar-item" onclick="showPanel('seats')" id="nav-seats">
+        <span class="icon">💺</span> Seat Management
+      </div>
+      <div class="sidebar-item" onclick="showPanel('delay')" id="nav-delay">
+        <span class="icon">⏰</span> Report Delay
+      </div>
+      <div class="sidebar-item" onclick="showPanel('notify')" id="nav-notify">
+        <span class="icon">📣</span> Send Notification
+      </div>
+      <div class="sidebar-item" onclick="showPanel('schedule')" id="nav-schedule">
+        <span class="icon">📅</span> My Schedule
+      </div>
+      <div class="sidebar-item" onclick="showPanel('bookings')" id="nav-bookings">
+        <span class="icon">👥</span> Passenger Bookings
+      </div>
+      <div class="sidebar-item" onclick="showPanel('driverchat')" id="nav-driverchat">
+        <span class="icon">💬</span> Passenger Messages
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- HOME -->
+    <div class="panel active" id="panel-home">
+      <div class="page-header">
+        <h2>Driver Dashboard</h2>
+        <p>Manage your assigned route and keep passengers informed.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="label">Assigned Bus</div>
+          <div class="value" id="driverBus">—</div>
+          <div class="change text-blue" id="driverBusPlate">—</div>
+        </div>
+        <div class="stat-card green">
+          <div class="label">My Route</div>
+          <div class="value" style="font-size:16px" id="driverRoute">—</div>
+          <div class="change text-green" id="driverRouteNum">—</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="label">Seat Capacity</div>
+          <div class="value" id="driverCapacity">—</div>
+          <div class="change text-gray">Total seats</div>
+        </div>
+        <div class="stat-card red">
+          <div class="label">Trip Status</div>
+          <div class="value" style="font-size:16px" id="driverTripStatus">Idle</div>
+          <div class="change" id="driverTripTime">—</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📋 Today's Information</h3></div>
+          <div class="card-body" id="driverInfoPanel">
+            <p class="text-sm text-gray">Loading driver information...</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>⚡ Quick Actions</h3></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-success btn-full" onclick="showPanel('trip')">🚌 Manage Trip</button>
+            <button class="btn btn-warning btn-full" onclick="showPanel('delay')">⏰ Report a Delay</button>
+            <button class="btn btn-primary btn-full" onclick="showPanel('notify')">📣 Send Passenger Update</button>
+            <button class="btn btn-secondary btn-full" onclick="showPanel('seats')">💺 Update Seat Availability</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTE -->
+    <div class="panel" id="panel-route">
+      <div class="page-header">
+        <h2>My Route</h2>
+        <p>Details about your assigned route for today</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📍 Route Details</h3></div>
+          <div class="card-body" id="routeDetails"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h3>🕐 Today's Schedule</h3></div>
+          <div class="card-body" id="routeSchedule"></div>
+        </div>
+      </div>
+
+      <div class="card mt-2">
+        <div class="card-header"><h3>🗺 Route Map (Simulated)</h3></div>
+        <div class="map-container" id="driverMap">
+          <div class="map-road h" style="top:50%;transform:translateY(-50%)"></div>
+          <div class="map-road h" style="top:25%;transform:translateY(-50%)"></div>
+          <div class="map-road v" style="left:20%"></div>
+          <div class="map-road v" style="left:50%"></div>
+          <div class="map-road v" style="left:80%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIP CONTROL -->
+    <div class="panel" id="panel-trip">
+      <div class="page-header">
+        <h2>Trip Control</h2>
+        <p>Start and manage your trip tracking</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>🚦 Trip Status</h3></div>
+        <div class="card-body trip-control">
+          <div class="trip-status-circle" id="tripCircle">
+            ⚫<br>
+            <small>Not Started</small>
+          </div>
+          <p id="tripStatusMsg" class="text-gray text-sm mb-2">Your GPS tracking is not active. Start the trip to begin tracking.</p>
+
+          <div id="tripInfo" class="hidden" style="background:var(--green-light);padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px;">
+            <strong>Trip Started</strong><br>
+            Started at: <span id="tripStartTime">—</span><br>
+            Elapsed: <span id="tripElapsed">0 min</span>
+          </div>
+
+          <div class="trip-btn-row">
+            <button class="big-trip-btn btn-success" id="startBtn" onclick="startTrip()">▶ Start Trip</button>
+            <button class="big-trip-btn btn-danger hidden" id="stopBtn" onclick="stopTrip()">⏹ End Trip</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="form-group" style="max-width:300px;margin:0 auto">
+            <label>Current Location / Stop</label>
+            <select class="form-control" id="currentStopSelect">
+              <option value="">-- Select current stop --</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary mt-1" onclick="updateLocation()">📍 Update Location</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEAT MANAGEMENT -->
+    <div class="panel" id="panel-seats">
+      <div class="page-header">
+        <h2>Seat Management</h2>
+        <p>Update the number of available seats on your bus</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>💺 Update Occupied Seats</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Number of Passengers Currently On Board</label>
+              <input type="number" class="form-control" id="occupiedCount" min="0" placeholder="e.g. 25" />
+            </div>
+            <div id="seatCapacityInfo" class="alert alert-info mb-2"></div>
+            <button class="btn btn-primary" onclick="updateSeats()">Update Seat Info</button>
+
+            <div class="divider"></div>
+            <p class="text-sm text-gray">This information is shown to passengers on the tracking page so they know if the bus is full.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📊 Seat Status</h3></div>
+          <div class="card-body">
+            <div id="seatProgress" style="display:flex;flex-direction:column;gap:16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DELAY REPORT -->
+    <div class="panel" id="panel-delay">
+      <div class="page-header">
+        <h2>Report Delay or Breakdown</h2>
+        <p>Notify passengers and dispatch about any issues on your route</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>⚠️ New Report</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Type of Incident</label>
+              <select class="form-control" id="incidentType">
+                <option value="traffic">Traffic Delay</option>
+                <option value="breakdown">Bus Breakdown</option>
+                <option value="accident">Road Accident</option>
+                <option value="weather">Bad Weather</option>
+                <option value="detour">Route Detour</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Estimated Delay (minutes)</label>
+              <input type="number" class="form-control" id="delayMinutes" min="0" max="120" placeholder="e.g. 15" />
+            </div>
+            <div class="form-group">
+              <label>Location / Description</label>
+              <textarea class="form-control" id="delayDesc" rows="4" placeholder="Describe where you are and what is happening..."></textarea>
+            </div>
+            <button class="btn btn-warning btn-full" onclick="reportDelay()">📣 Send Delay Notification to Passengers</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📋 Recent Reports</h3></div>
+          <div class="card-body" id="recentDelays">
+            <p class="text-sm text-gray">No recent delay reports.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEND NOTIFICATION -->
+    <div class="panel" id="panel-notify">
+      <div class="page-header">
+        <h2>Send Passenger Notification</h2>
+        <p>Broadcast an update to all passengers on your route</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><h3>📣 New Notification</h3></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>Notification Type</label>
+              <select class="form-control" id="notifType">
+                <option value="info">General Information</option>
+                <option value="delay">Delay Alert</option>
+                <option value="announcement">Announcement</option>
+                <option value="warning">Warning</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Message</label>
+              <textarea class="form-control" id="notifMessage" rows="4" placeholder="Type your message to passengers here..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="sendDriverNotif()">📤 Send Notification</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><h3>📨 Recent Notifications Sent</h3></div>
+          <div class="card-body" id="sentNotifs">
+            <p class="text-sm text-gray">No notifications sent yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PASSENGER BOOKINGS -->
+    <div class="panel" id="panel-bookings">
+      <div class="page-header">
+        <h2>Passenger Bookings</h2>
+        <p>Passengers who scheduled a ride on your route. Location shown for those not yet arrived.</p>
+      </div>
+      <div class="card mb-2">
+        <div class="card-header"><h3>🗺 Passenger Locations on Map</h3></div>
+        <div class="map-container" id="bookingsMap">
+          <div class="map-road h" style="top:50%;transform:translateY(-50%)"></div>
+          <div class="map-road h" style="top:25%;transform:translateY(-50%)"></div>
+          <div class="map-road v" style="left:20%"></div>
+          <div class="map-road v" style="left:50%"></div>
+          <div class="map-road v" style="left:80%"></div>
+        </div>
+        <div style="padding:10px 16px; font-size:12px; color:var(--gray); display:flex; gap:16px;">
+          <span>🚌 Your bus</span>
+          <span>🔵 Scheduled passenger</span>
+          <span>🔴 Late / not arrived</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header flex-between">
+          <h3>👥 Scheduled Passengers</h3>
+          <button class="btn btn-secondary btn-sm" onclick="refreshBookings()">🔄 Refresh</button>
+        </div>
+        <div class="card-body" id="bookingsTableWrap">
+          <p class="text-sm text-gray">Loading bookings...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVER CHAT -->
+    <div class="panel" id="panel-driverchat">
+      <div class="page-header">
+        <h2>Passenger Messages</h2>
+        <p>Chat directly with passengers on your route</p>
+      </div>
+      <div class="grid-2" style="align-items:start">
+        <div class="card">
+          <div class="card-header"><h3>👥 Conversations</h3></div>
+          <div class="card-body" id="driverConvList">
+            <p class="text-sm text-gray">No conversations yet. Passengers can message you from their dashboard.</p>
+          </div>
+        </div>
+        <div id="driverChatBox" style="display:none">
+          <div class="chat-wrap">
+            <div class="chat-header">
+              <div class="chat-avatar">👤</div>
+              <div>
+                <div class="bold text-sm" id="driverChatPassengerName">Passenger</div>
+                <div class="text-sm text-gray" id="driverChatPassengerRoute">—</div>
+              </div>
+            </div>
+            <div class="chat-messages" id="driverChatMessages"></div>
+            <div class="chat-input-row">
+              <input type="text" class="chat-input" id="driverChatInput" placeholder="Type a reply..." onkeydown="if(event.key==='Enter') sendDriverMsg()" />
+              <button class="chat-send-btn" onclick="sendDriverMsg()">Send ➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="panel" id="panel-schedule">
+      <div class="page-header">
+        <h2>My Schedule</h2>
+        <p>Your assigned departure times and route plan</p>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>📅 Daily Schedule</h3></div>
+        <div class="card-body" id="scheduleContent"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<footer class="app-footer" style="margin-left:var(--sidebar-width)">
+  SmartBus System &bull; Driver Portal &bull; Group P &ndash; SWP316D
+</footer>
+
+<div id="toast-container"></div>
+<script src="./src/config.js"></script>
+<script type="module" src="./src/driver.js"></script>
+</body>
+</html>
