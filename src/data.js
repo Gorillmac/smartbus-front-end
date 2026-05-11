@@ -92,6 +92,21 @@ export const DB = {
     return item;
   },
 
+  async create(key, item) {
+    const path = resourcePaths[key];
+    if (!path) {
+      return this.add(key, item);
+    }
+
+    const saved = await request(`/${path}`, {
+      method: 'POST',
+      body: JSON.stringify(item),
+    });
+
+    cache[key] = [...this.getAll(key).filter(existing => existing.id != saved.id), saved];
+    return saved;
+  },
+
   update(key, id, updates) {
     const list = this.getAll(key);
     const idx = list.findIndex(i => i.id == id);

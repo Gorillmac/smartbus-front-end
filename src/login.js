@@ -81,15 +81,20 @@ window.doRegister = async function() {
   }
 
   const newUser = {
-    id: DB.nextId('users'),
     name, email, phone, password: pass,
     role: 'passenger',
     joinDate: new Date().toISOString().split('T')[0]
   };
-  DB.add('users', newUser);
-  DB.setSession(newUser);
-  showToast('Account created! Welcome to SmartBus', 'success');
-  setTimeout(() => goToDashboard('passenger'), 700);
+  try {
+    const savedUser = await DB.create('users', newUser);
+    DB.setSession(savedUser);
+    showToast('Account created! Welcome to SmartBus', 'success');
+    setTimeout(() => goToDashboard('passenger'), 700);
+  } catch (error) {
+    console.error(error);
+    err.textContent = 'Could not create account. Please check that the backend is running.';
+    err.classList.remove('hidden');
+  }
 };
 
 window.openReg = function() {
