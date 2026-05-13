@@ -12,10 +12,20 @@
 const defaultApiBase = "http://localhost/smartbus-backend/public/api";
 const params = new URLSearchParams(window.location.search);
 const apiFromUrl = params.get("api");
-const apiFromStorage = localStorage.getItem("SMARTBUS_API_BASE");
 
-if (apiFromUrl) {
+if (apiFromUrl === "reset" || apiFromUrl === "clear") {
+  localStorage.removeItem("SMARTBUS_API_BASE");
+}
+
+if (apiFromUrl && apiFromUrl !== "reset" && apiFromUrl !== "clear") {
   localStorage.setItem("SMARTBUS_API_BASE", apiFromUrl);
 }
 
+const apiFromStorage = localStorage.getItem("SMARTBUS_API_BASE");
 window.SMARTBUS_API_BASE = apiFromUrl || apiFromStorage || defaultApiBase;
+
+if (window.SMARTBUS_API_BASE === "reset" || window.SMARTBUS_API_BASE === "clear") {
+  window.SMARTBUS_API_BASE = defaultApiBase;
+}
+
+console.info("SmartBus API:", window.SMARTBUS_API_BASE);
