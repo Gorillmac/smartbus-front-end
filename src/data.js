@@ -19,8 +19,14 @@ const resourcePaths = {
 const cache = Object.fromEntries(Object.keys(resourcePaths).map(key => [key, key === 'seat_data' ? {} : []]));
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const method = (options.method || 'GET').toUpperCase();
+  const cacheBuster = method === 'GET'
+    ? `${path.includes('?') ? '&' : '?'}_=${Date.now()}`
+    : '';
+
+  const response = await fetch(`${API_BASE}${path}${cacheBuster}`, {
     headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    cache: 'no-store',
     ...options,
   });
   const data = await response.json().catch(() => null);
