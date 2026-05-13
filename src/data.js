@@ -63,6 +63,19 @@ export const DB = {
     }
   },
 
+  async reload(keys = Object.keys(resourcePaths)) {
+    const selectedKeys = Array.isArray(keys) ? keys : [keys];
+    await Promise.all(selectedKeys.map(async key => {
+      const path = resourcePaths[key];
+      if (!path) return;
+      try {
+        cache[key] = await request(`/${path}`);
+      } catch (error) {
+        console.error(`Failed to reload ${key}`, error);
+      }
+    }));
+  },
+
   getAll(key) {
     const data = cache[key];
     if (Array.isArray(data)) return data;

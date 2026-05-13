@@ -197,7 +197,7 @@ window.editBus = function(id) {
   document.getElementById('busDriver').value = bus.driverId || '';
 };
 
-window.saveBus = function() {
+window.saveBus = async function() {
   const editId = document.getElementById('busEditId').value;
   const data = {
     number: document.getElementById('busNumber').value.trim(),
@@ -209,15 +209,21 @@ window.saveBus = function() {
     driverId: document.getElementById('busDriver').value ? parseInt(document.getElementById('busDriver').value) : null,
   };
   if (!data.number || !data.plate) { showToast('Please fill in bus number and plate', 'error'); return; }
-  if (editId) {
-    DB.update('buses', parseInt(editId), data);
-    showToast('Bus updated!', 'success');
-  } else {
-    DB.add('buses', { id: DB.nextId('buses'), ...data });
-    showToast('Bus added!', 'success');
+  try {
+    if (editId) {
+      DB.update('buses', parseInt(editId), data);
+      showToast('Bus updated!', 'success');
+    } else {
+      await DB.create('buses', data);
+      showToast('Bus added!', 'success');
+    }
+    await DB.reload(['buses', 'users']);
+    closeModal('busModal');
+    loadBuses();
+  } catch (error) {
+    console.error(error);
+    showToast('Could not save bus. Check backend connection.', 'error');
   }
-  closeModal('busModal');
-  loadBuses();
 };
 
 window.deleteBus = function(id) {
@@ -274,7 +280,7 @@ window.editRoute = function(id) {
   document.getElementById('routeStatus').value = r.status;
 };
 
-window.saveRoute = function() {
+window.saveRoute = async function() {
   const editId = document.getElementById('routeEditId').value;
   const data = {
     number: document.getElementById('routeNum').value.trim(),
@@ -287,15 +293,21 @@ window.saveRoute = function() {
     status: document.getElementById('routeStatus').value,
   };
   if (!data.number || !data.name) { showToast('Please fill in route number and name', 'error'); return; }
-  if (editId) {
-    DB.update('routes', parseInt(editId), data);
-    showToast('Route updated!', 'success');
-  } else {
-    DB.add('routes', { id: DB.nextId('routes'), ...data });
-    showToast('Route added!', 'success');
+  try {
+    if (editId) {
+      DB.update('routes', parseInt(editId), data);
+      showToast('Route updated!', 'success');
+    } else {
+      await DB.create('routes', data);
+      showToast('Route added!', 'success');
+    }
+    await DB.reload(['routes', 'buses']);
+    closeModal('routeModal');
+    loadRoutes();
+  } catch (error) {
+    console.error(error);
+    showToast('Could not save route. Check backend connection.', 'error');
   }
-  closeModal('routeModal');
-  loadRoutes();
 };
 
 window.deleteRoute = function(id) {
@@ -339,7 +351,7 @@ window.openDriverModal = function() {
   document.getElementById('driverModal').classList.add('open');
 };
 
-window.saveDriver = function() {
+window.saveDriver = async function() {
   const name    = document.getElementById('drvName').value.trim();
   const email   = document.getElementById('drvEmail').value.trim();
   const phone   = document.getElementById('drvPhone').value.trim();
@@ -350,12 +362,18 @@ window.saveDriver = function() {
   if (!name || !email || !pass) { showToast('Fill in name, email and password', 'error'); return; }
   if (DB.getAll('users').find(u => u.email === email)) { showToast('Email already in use', 'error'); return; }
 
-  const newDriver = { id: DB.nextId('users'), name, email, password: pass, phone, licenseNumber: license, role: 'driver', busId: busId ? parseInt(busId) : null, joinDate: dateToday() };
-  DB.add('users', newDriver);
-  if (busId) DB.update('buses', parseInt(busId), { driverId: newDriver.id });
-  showToast('Driver added!', 'success');
-  closeModal('driverModal');
-  loadDrivers();
+  const newDriver = { name, email, password: pass, phone, licenseNumber: license, role: 'driver', busId: busId ? parseInt(busId) : null, joinDate: dateToday() };
+  try {
+    const savedDriver = await DB.create('users', newDriver);
+    if (busId) DB.update('buses', parseInt(busId), { driverId: savedDriver.id });
+    await DB.reload(['users', 'buses']);
+    showToast('Driver added!', 'success');
+    closeModal('driverModal');
+    loadDrivers();
+  } catch (error) {
+    console.error(error);
+    showToast('Could not add driver. Check backend connection.', 'error');
+  }
 };
 
 window.removeDriver = function(id) {
