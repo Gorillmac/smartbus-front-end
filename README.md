@@ -34,6 +34,32 @@ npm run dev
 http://localhost:5173
 ```
 
+## Connect To A Backend On Another PC
+
+The frontend does not connect to MySQL directly. It connects to the PHP backend API, and the backend connects to MySQL.
+
+On the backend PC, first confirm this works:
+
+```text
+http://BACKEND-PC-IP/smartbus-backend/public/api/debug
+```
+
+If that PC uses XAMPP MySQL on port `3307`, the debug response must show `"port": "3307"` and counts for `routes`, `buses`, and `users`.
+
+On the frontend PC, clear any old saved API URL:
+
+```text
+http://localhost:5173/?api=reset
+```
+
+Then open the frontend with the backend PC API URL:
+
+```text
+http://localhost:5173/?api=http://BACKEND-PC-IP/smartbus-backend/public/api
+```
+
+Replace `BACKEND-PC-IP` with the real IP address of the PC running XAMPP, for example `192.168.1.25`.
+
 ## Hosted Frontend With Ngrok Backend
 
 If the backend is running on a PC through ngrok, open the hosted frontend like this:

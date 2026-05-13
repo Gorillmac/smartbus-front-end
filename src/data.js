@@ -17,6 +17,51 @@ const resourcePaths = {
 };
 
 const cache = Object.fromEntries(Object.keys(resourcePaths).map(key => [key, key === 'seat_data' ? {} : []]));
+let lastApiLoadErrors = [];
+
+function showApiWarning(errors = lastApiLoadErrors) {
+  if (!Array.isArray(errors) || errors.length === 0 || typeof document === 'undefined') return;
+
+  document.getElementById('smartbus-api-warning')?.remove();
+
+  const resources = errors.map(error => error.key).join(', ');
+  const banner = document.createElement('div');
+  banner.id = 'smartbus-api-warning';
+  banner.style.cssText = [
+    'position:fixed',
+    'left:16px',
+    'right:16px',
+    'bottom:16px',
+    'z-index:99999',
+    'max-width:760px',
+    'padding:14px 16px',
+    'background:#7f1d1d',
+    'color:#fff',
+    'border:1px solid #fecaca',
+    'border-radius:8px',
+    'box-shadow:0 12px 28px rgba(0,0,0,.22)',
+    'font:14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+  ].join(';');
+
+  const title = document.createElement('strong');
+  title.textContent = 'SmartBus could not load database data.';
+  const apiLine = document.createElement('div');
+  apiLine.textContent = `API: ${API_BASE}`;
+  const failedLine = document.createElement('div');
+  failedLine.textContent = `Failed data: ${resources}`;
+  const helpLine = document.createElement('div');
+  helpLine.textContent = `Open ${API_BASE}/debug and confirm this backend uses MySQL port 3307.`;
+  banner.append(title, apiLine, failedLine, helpLine);
+  banner.addEventListener('click', () => banner.remove());
+  document.body.appendChild(banner);
+}
+
+window.smartbusApiDebug = async () => {
+  const result = await request('/debug');
+  console.table(result.counts || {});
+  console.log(result);
+  return result;
+};
 
 async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
@@ -53,12 +98,14 @@ export const DB = {
   },
 
   async load() {
+    const errors = [];
     const entries = await Promise.all(
       Object.entries(resourcePaths).map(async ([key, path]) => {
         try {
           return [key, await request(`/${path}`)];
         } catch (error) {
           console.error(`Failed to load ${key}`, error);
+          errors.push({ key, message: error.message });
           return [key, key === 'seat_data' ? {} : []];
         }
       }),
@@ -67,6 +114,8 @@ export const DB = {
     for (const [key, value] of entries) {
       cache[key] = value;
     }
+    lastApiLoadErrors = errors;
+    showApiWarning(errors);
   },
 
   async reload(keys = Object.keys(resourcePaths)) {
@@ -78,6 +127,8 @@ export const DB = {
         cache[key] = await request(`/${path}`);
       } catch (error) {
         console.error(`Failed to reload ${key}`, error);
+        lastApiLoadErrors = [{ key, message: error.message }];
+        showApiWarning(lastApiLoadErrors);
       }
     }));
   },
