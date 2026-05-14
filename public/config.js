@@ -3,11 +3,11 @@
 // Default XAMPP URL:
 //   http://localhost/smartbus-backend/public/api
 //
-// Hosted frontend + ngrok backend example:
-//   https://abc123.ngrok-free.app/smartbus-backend/public/api
+// Frontend on another PC:
+//   http://BACKEND-PC-IP/smartbus-backend/public/api
 //
 // You can also set the API URL without rebuilding by opening the frontend with:
-//   https://your-frontend-site.com/?api=https://abc123.ngrok-free.app/smartbus-backend/public/api
+//   http://localhost:5173/?api=http://BACKEND-PC-IP/smartbus-backend/public/api
 
 const defaultApiBase = "http://localhost/smartbus-backend/public/api";
 const params = new URLSearchParams(window.location.search);
@@ -27,5 +27,3 @@ window.SMARTBUS_API_BASE = apiFromUrl || apiFromStorage || defaultApiBase;
 if (window.SMARTBUS_API_BASE === "reset" || window.SMARTBUS_API_BASE === "clear") {
   window.SMARTBUS_API_BASE = defaultApiBase;
 }
-
-console.info("SmartBus API:", window.SMARTBUS_API_BASE);

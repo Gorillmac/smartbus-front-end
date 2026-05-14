@@ -44,7 +44,7 @@ On the backend PC, first confirm this works:
 http://BACKEND-PC-IP/smartbus-backend/public/api/debug
 ```
 
-If that PC uses XAMPP MySQL on port `3307`, the debug response must show `"port": "3307"` and counts for `routes`, `buses`, and `users`.
+The debug response must show `"port": "3306"` and counts for `routes`, `buses`, and `users`.
 
 On the frontend PC, clear any old saved API URL:
 
@@ -84,7 +84,7 @@ Upload the generated `dist` folder to your frontend hosting provider.
 ## Backend URL
 
 ```text
-src/config.js
+public/config.js
 ```
 
 For XAMPP on the same PC:

@@ -1,6 +1,26 @@
 /* SmartBus shared API data layer. */
 
-export const API_BASE = window.SMARTBUS_API_BASE || 'http://localhost:8000/api';
+function resolveApiBase() {
+  const defaultApiBase = 'http://localhost/smartbus-backend/public/api';
+  const params = new URLSearchParams(window.location.search);
+  const apiFromUrl = params.get('api');
+
+  if (apiFromUrl === 'reset' || apiFromUrl === 'clear') {
+    localStorage.removeItem('SMARTBUS_API_BASE');
+    return defaultApiBase;
+  }
+
+  if (apiFromUrl) {
+    localStorage.setItem('SMARTBUS_API_BASE', apiFromUrl);
+    return apiFromUrl;
+  }
+
+  return window.SMARTBUS_API_BASE || localStorage.getItem('SMARTBUS_API_BASE') || defaultApiBase;
+}
+
+export const API_BASE = resolveApiBase();
+window.SMARTBUS_API_BASE = API_BASE;
+console.info('SmartBus API:', API_BASE);
 
 const resourcePaths = {
   active_trips: 'active_trips',
@@ -50,7 +70,7 @@ function showApiWarning(errors = lastApiLoadErrors) {
   const failedLine = document.createElement('div');
   failedLine.textContent = `Failed data: ${resources}`;
   const helpLine = document.createElement('div');
-  helpLine.textContent = `Open ${API_BASE}/debug and confirm this backend uses MySQL port 3307.`;
+  helpLine.textContent = `Open ${API_BASE}/debug and confirm this backend uses MySQL port 3306.`;
   banner.append(title, apiLine, failedLine, helpLine);
   banner.addEventListener('click', () => banner.remove());
   document.body.appendChild(banner);
