@@ -85,16 +85,31 @@ window.smartbusApiDebug = async () => {
 
 async function request(path, options = {}) {
   const method = (options.method || 'GET').toUpperCase();
+  const { headers = {}, ...fetchOptions } = options;
   const cacheBuster = method === 'GET'
     ? `${path.includes('?') ? '&' : '?'}_=${Date.now()}`
     : '';
 
   const response = await fetch(`${API_BASE}${path}${cacheBuster}`, {
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...fetchOptions,
+    headers: {
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
+      ...headers,
+    },
     cache: 'no-store',
-    ...options,
   });
-  const data = await response.json().catch(() => null);
+
+  const text = await response.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch (error) {
+      throw new Error(`API did not return JSON. Check the API URL or ngrok tunnel: ${API_BASE}`);
+    }
+  }
+
   if (!response.ok) {
     throw new Error(data?.error || data?.message || `Request failed: ${response.status}`);
   }

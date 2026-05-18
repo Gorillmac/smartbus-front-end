@@ -70,6 +70,8 @@ https://your-frontend-site.com/?api=https://abc123.ngrok-free.app/smartbus-backe
 
 Replace `abc123.ngrok-free.app` with the real ngrok URL.
 
+Use the HTTPS ngrok URL, not an `http://localhost` backend URL, when the frontend is hosted online. The frontend sends the `ngrok-skip-browser-warning` API header automatically so ngrok returns JSON instead of its warning page.
+
 The app saves the API URL in the browser, so students do not need to rebuild the frontend every time the ngrok URL changes.
 
 ## Build For Hosting
